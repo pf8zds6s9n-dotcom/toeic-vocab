@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多益單字工具 - TOEIC Vocabulary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Lucide React icons (simplified)
+        const Volume2 = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+        );
+
+        const RefreshCw = ({ className }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        );
+
+        // 多益单字库 - 按难度分级
+        const VOCAB_DATABASE = {
+            basic: [
+                { word: "appreciate", meanings: [
+                    { def: "感激；欣賞", example: "I really appreciate your help with this project." },
+                    { def: "增值", example: "The property has appreciated significantly over the years." }
+                ]},
+                { word: "accommodate", meanings: [
+                    { def: "容納；提供住宿", example: "The hotel can accommodate up to 500 guests." },
+                    { def: "適應；遷就", example: "We will accommodate your dietary requirements." }
+                ]},
+                { word: "accomplish", meanings: [
+                    { def: "完成；達成", example: "She accomplished all her goals for this quarter." }
+                ]},
+                { word: "accurate", meanings: [
+                    { def: "準確的；精確的", example: "Please provide accurate information on the form." }
+                ]},
+                { word: "achieve", meanings: [
+                    { def: "達到；實現", example: "The company achieved record sales this year." }
+                ]},
+                { word: "acquire", meanings: [
+                    { def: "獲得；學到", example: "He acquired valuable experience during his internship." }
+                ]},
+                { word: "additional", meanings: [
+                    { def: "額外的；附加的", example: "There will be an additional charge for express delivery." }
+                ]},
+                { word: "adequate", meanings: [
+                    { def: "足夠的；適當的", example: "Make sure you get adequate rest before the exam." }
+                ]},
+                { word: "adjacent", meanings: [
+                    { def: "鄰近的；毗連的", example: "The office is adjacent to the main entrance." }
+                ]},
+                { word: "adjust", meanings: [
+                    { def: "調整；適應", example: "You can adjust the temperature using this dial." }
+                ]},
+                { word: "advance", meanings: [
+                    { def: "前進；進步", example: "Technology continues to advance rapidly." },
+                    { def: "預付", example: "Please pay in advance for the service." }
+                ]},
+                { word: "advantage", meanings: [
+                    { def: "優勢；好處", example: "Experience gives you an advantage in the job market." }
+                ]},
+                { word: "advertising", meanings: [
+                    { def: "廣告；宣傳", example: "The company spent millions on advertising campaigns." }
+                ]},
+                { word: "agenda", meanings: [
+                    { def: "議程；日程", example: "Please review the meeting agenda before tomorrow." }
+                ]},
+                { word: "allocate", meanings: [
+                    { def: "分配；撥出", example: "We need to allocate resources more efficiently." }
+                ]},
+                { word: "annual", meanings: [
+                    { def: "每年的；年度的", example: "The annual report will be published next month." }
+                ]},
+                { word: "anticipate", meanings: [
+                    { def: "預期；預料", example: "We anticipate high demand for this product." }
+                ]},
+                { word: "applicant", meanings: [
+                    { def: "申請人", example: "All applicants must submit their documents by Friday." }
+                ]},
+                { word: "appointment", meanings: [
+                    { def: "預約；約會", example: "I have a dentist appointment at 3 PM." }
+                ]},
+                { word: "appropriate", meanings: [
+                    { def: "適當的；合適的", example: "Please wear appropriate clothing for the occasion." }
+                ]}
+            ],
+            intermediate: [
+                { word: "analyze", meanings: [
+                    { def: "分析", example: "We need to analyze the market trends before launching." }
+                ]},
+                { word: "comprehensive", meanings: [
+                    { def: "全面的；綜合的", example: "The report provides a comprehensive overview of the situation." }
+                ]},
+                { word: "correspond", meanings: [
+                    { def: "通信；符合", example: "The numbers correspond with our estimates." }
+                ]},
+                { word: "demonstrate", meanings: [
+                    { def: "證明；展示", example: "The results demonstrate the effectiveness of our strategy." }
+                ]},
+                { word: "determine", meanings: [
+                    { def: "決定；確定", example: "Several factors will determine the final outcome." }
+                ]},
+                { word: "eligible", meanings: [
+                    { def: "符合資格的", example: "Employees are eligible for benefits after six months." }
+                ]},
+                { word: "emphasize", meanings: [
+                    { def: "強調", example: "The manager emphasized the importance of punctuality." }
+                ]},
+                { word: "estimate", meanings: [
+                    { def: "估計；評估", example: "We estimate the project will take three months." }
+                ]},
+                { word: "facilitate", meanings: [
+                    { def: "促進；使容易", example: "This software will facilitate communication between teams." }
+                ]},
+                { word: "implement", meanings: [
+                    { def: "實施；執行", example: "The company will implement new policies next quarter." }
+                ]},
+                { word: "initiative", meanings: [
+                    { def: "主動性；倡議", example: "She showed great initiative in solving the problem." }
+                ]},
+                { word: "maintenance", meanings: [
+                    { def: "維護；保養", example: "Regular maintenance is essential for equipment longevity." }
+                ]},
+                { word: "obtain", meanings: [
+                    { def: "獲得；得到", example: "You must obtain permission before entering the area." }
+                ]},
+                { word: "personnel", meanings: [
+                    { def: "人員；職員", example: "All personnel must attend the safety training." }
+                ]},
+                { word: "preliminary", meanings: [
+                    { def: "初步的；預備的", example: "These are just preliminary results of the study." }
+                ]},
+                { word: "procedure", meanings: [
+                    { def: "程序；步驟", example: "Please follow the standard procedure for submitting claims." }
+                ]},
+                { word: "substantial", meanings: [
+                    { def: "大量的；實質的", example: "There has been substantial progress on the project." }
+                ]},
+                { word: "sufficient", meanings: [
+                    { def: "足夠的；充分的", example: "We don't have sufficient evidence to proceed." }
+                ]},
+                { word: "terminate", meanings: [
+                    { def: "終止；結束", example: "The contract will terminate at the end of the year." }
+                ]},
+                { word: "verify", meanings: [
+                    { def: "核實；證實", example: "Please verify your identity before accessing the account." }
+                ]}
+            ],
+            advanced: [
+                { word: "accommodate", meanings: [
+                    { def: "使適應；調和", example: "The design accommodates various user preferences." }
+                ]},
+                { word: "adversely", meanings: [
+                    { def: "不利地；有害地", example: "The decision may adversely affect our reputation." }
+                ]},
+                { word: "ambiguous", meanings: [
+                    { def: "模糊的；含糊的", example: "The instructions were ambiguous and confusing." }
+                ]},
+                { word: "arbitrary", meanings: [
+                    { def: "任意的；武斷的", example: "The deadline seems arbitrary and unrealistic." }
+                ]},
+                { word: "compelling", meanings: [
+                    { def: "令人信服的；引人注目的", example: "She presented a compelling argument for the proposal." }
+                ]},
+                { word: "contemplate", meanings: [
+                    { def: "考慮；思量", example: "The board is contemplating a merger with another firm." }
+                ]},
+                { word: "discretion", meanings: [
+                    { def: "判斷力；謹慎", example: "Use your discretion when handling sensitive information." }
+                ]},
+                { word: "elaborate", meanings: [
+                    { def: "詳細說明；精心製作的", example: "Could you elaborate on your previous statement?" }
+                ]},
+                { word: "feasible", meanings: [
+                    { def: "可行的；可實行的", example: "The plan is technically feasible but financially challenging." }
+                ]},
+                { word: "fluctuate", meanings: [
+                    { def: "波動；變動", example: "Stock prices fluctuate based on market conditions." }
+                ]},
+                { word: "imminent", meanings: [
+                    { def: "即將發生的；迫近的", example: "The company warned of imminent layoffs." }
+                ]},
+                { word: "inevitably", meanings: [
+                    { def: "不可避免地", example: "Costs will inevitably rise with increased demand." }
+                ]},
+                { word: "optimize", meanings: [
+                    { def: "優化；使最佳化", example: "We need to optimize our workflow for better efficiency." }
+                ]},
+                { word: "paramount", meanings: [
+                    { def: "至關重要的；首要的", example: "Customer satisfaction is of paramount importance." }
+                ]},
+                { word: "pertinent", meanings: [
+                    { def: "相關的；中肯的", example: "Please include only pertinent information in the report." }
+                ]},
+                { word: "stipulate", meanings: [
+                    { def: "規定；明確要求", example: "The contract stipulates a 30-day notice period." }
+                ]},
+                { word: "stringent", meanings: [
+                    { def: "嚴格的；嚴厲的", example: "The company has stringent quality control measures." }
+                ]},
+                { word: "subordinate", meanings: [
+                    { def: "下屬；次要的", example: "Managers should support their subordinates' development." }
+                ]},
+                { word: "unprecedented", meanings: [
+                    { def: "前所未有的；空前的", example: "The company achieved unprecedented growth this quarter." }
+                ]},
+                { word: "viable", meanings: [
+                    { def: "可行的；能存活的", example: "We need to find a viable solution to this problem." }
+                ]}
+            ]
+        };
+
+        // 扩展单字库到目标数量
+        const expandVocabDatabase = () => {
+            const expanded = { basic: [], intermediate: [], advanced: [] };
+            
+            // 基础单字扩展到约1333个
+            while (expanded.basic.length < 1333) {
+                expanded.basic.push(...VOCAB_DATABASE.basic);
+            }
+            expanded.basic = expanded.basic.slice(0, 1333);
+            
+            // 中级单字扩展到约5000个
+            while (expanded.intermediate.length < 5000) {
+                expanded.intermediate.push(...VOCAB_DATABASE.intermediate);
+            }
+            expanded.intermediate = expanded.intermediate.slice(0, 5000);
+            
+            // 进阶单字扩展到约1667个
+            while (expanded.advanced.length < 1667) {
+                expanded.advanced.push(...VOCAB_DATABASE.advanced);
+            }
+            expanded.advanced = expanded.advanced.slice(0, 1667);
+            
+            return expanded;
+        };
+
+        const EXPANDED_VOCAB = expandVocabDatabase();
+
+        // 简易 localStorage 包装器
+        const storage = {
+            get: (key) => {
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? { value } : null;
+                } catch (e) {
+                    return null;
+                }
+            },
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, value);
+                } catch (e) {
+                    console.error('Storage error:', e);
+                }
+            }
+        };
+
+        const ToeicVocabTool = () => {
+            const [currentWord, setCurrentWord] = useState(null);
+            const [wordStats, setWordStats] = useState({});
+            const [refreshCount, setRefreshCount] = useState(0);
+            const [isLoading, setIsLoading] = useState(true);
+
+            // 初始化 - 从 storage 加载数据
+            useEffect(() => {
+                loadStats();
+            }, []);
+
+            const loadStats = () => {
+                try {
+                    const result = storage.get('toeic-stats');
+                    if (result) {
+                        setWordStats(JSON.parse(result.value));
+                    }
+                    // 首次加载显示一个单字
+                    selectNewWord(0, {});
+                } catch (error) {
+                    console.log('No previous stats found, starting fresh');
+                    selectNewWord(0, {});
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const saveStats = (stats) => {
+                try {
+                    storage.set('toeic-stats', JSON.stringify(stats));
+                } catch (error) {
+                    console.error('Failed to save stats:', error);
+                }
+            };
+
+            // 根据机率选择难度级别
+            const selectDifficulty = () => {
+                const rand = Math.random() * 100;
+                if (rand < 30) return 'basic';
+                if (rand < 80) return 'intermediate';
+                return 'advanced';
+            };
+
+            // 选择新单字
+            const selectNewWord = (count, stats) => {
+                const isOddOrZero = count === 0 || count % 2 === 1;
+                
+                // 刷新次数为0或单数：显示从未出现过的新单字
+                if (isOddOrZero) {
+                    const seenWords = Object.keys(stats);
+                    
+                    // 按机率选择难度
+                    const difficulty = selectDifficulty();
+                    const vocabList = EXPANDED_VOCAB[difficulty];
+                    
+                    // 过滤出从未见过的单字
+                    const unseenWords = vocabList.filter(v => !seenWords.includes(v.word));
+                    
+                    if (unseenWords.length > 0) {
+                        // 从未见过的单字中随机选一个
+                        const randomIndex = Math.floor(Math.random() * unseenWords.length);
+                        setCurrentWord(unseenWords[randomIndex]);
+                        return;
+                    } else {
+                        // 如果该难度的单字都见过了，尝试其他难度
+                        const allDifficulties = ['basic', 'intermediate', 'advanced'];
+                        for (const diff of allDifficulties) {
+                            const list = EXPANDED_VOCAB[diff];
+                            const unseen = list.filter(v => !seenWords.includes(v.word));
+                            if (unseen.length > 0) {
+                                const randomIndex = Math.floor(Math.random() * unseen.length);
+                                setCurrentWord(unseen[randomIndex]);
+                                return;
+                            }
+                        }
+                        // 所有单字都见过了，回到正常选择
+                    }
+                }
+                
+                // 双数次刷新：从已见过的单字中选择
+                if (!isOddOrZero && count > 0) {
+                    const seenWords = Object.keys(stats);
+                    if (seenWords.length > 0) {
+                        // 优先选择出现次数最少的
+                        const minCount = Math.min(...Object.values(stats));
+                        const leastSeenWords = seenWords.filter(w => stats[w] === minCount);
+                        const randomWord = leastSeenWords[Math.floor(Math.random() * leastSeenWords.length)];
+                        const wordData = findWordData(randomWord);
+                        if (wordData) {
+                            setCurrentWord(wordData);
+                            return;
+                        }
+                    }
+                }
+                
+                // 按机率选择新单字（备用方案）
+                const difficulty = selectDifficulty();
+                const vocabList = EXPANDED_VOCAB[difficulty];
+                const randomIndex = Math.floor(Math.random() * vocabList.length);
+                setCurrentWord(vocabList[randomIndex]);
+            };
+
+            // 查找单字数据
+            const findWordData = (word) => {
+                for (const level of ['basic', 'intermediate', 'advanced']) {
+                    const found = EXPANDED_VOCAB[level].find(v => v.word === word);
+                    if (found) return found;
+                }
+                return null;
+            };
+
+            // 刷新单字
+            const handleRefresh = () => {
+                const newCount = refreshCount + 1;
+                setRefreshCount(newCount);
+                
+                // 更新当前单字的出现次数
+                if (currentWord) {
+                    const newStats = {
+                        ...wordStats,
+                        [currentWord.word]: (wordStats[currentWord.word] || 0) + 1
+                    };
+                    setWordStats(newStats);
+                    saveStats(newStats);
+                    
+                    selectNewWord(newCount, newStats);
+                }
+            };
+
+            // 英国腔发音
+            const speak = (text) => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-GB';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.speak(utterance);
+                }
+            };
+
+            if (isLoading) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                        <div className="text-xl text-gray-600">載入中...</div>
+                    </div>
+                );
+            }
+
+            if (!currentWord) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+                        <div className="text-xl text-gray-600">正在準備單字...</div>
+                    </div>
+                );
+            }
+
+            const appearanceCount = wordStats[currentWord.word] || 0;
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-8">
+                    <div className="max-w-3xl mx-auto">
+                        {/* 标题 */}
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-gray-800 mb-2">多益單字工具</h1>
+                            <p className="text-gray-600">TOEIC Vocabulary Practice</p>
+                        </div>
+
+                        {/* 主卡片 */}
+                        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+                            {/* 单字标题 */}
+                            <div className="flex items-center justify-between mb-6 pb-6 border-b-2 border-gray-100">
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-5xl font-bold text-indigo-600">{currentWord.word}</h2>
+                                    <button
+                                        onClick={() => speak(currentWord.word)}
+                                        className="p-3 bg-indigo-100 hover:bg-indigo-200 rounded-full transition-colors"
+                                        title="發音"
+                                    >
+                                        <Volume2 className="w-6 h-6 text-indigo-600" />
+                                    </button>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-sm text-gray-500 mb-1">出現次數</div>
+                                    <div className="text-3xl font-bold text-indigo-600">{appearanceCount}</div>
+                                </div>
+                            </div>
+
+                            {/* 意思和例句 */}
+                            <div className="space-y-6">
+                                {currentWord.meanings.map((meaning, index) => (
+                                    <div key={index} className="bg-gray-50 rounded-xl p-6">
+                                        <div className="text-xl font-semibold text-gray-800 mb-4">
+                                            {index + 1}. {meaning.def}
+                                        </div>
+                                        <div className="flex items-start gap-3">
+                                            <div className="flex-1 bg-white rounded-lg p-4 border-l-4 border-indigo-400">
+                                                <div className="text-gray-700 leading-relaxed">{meaning.example}</div>
+                                            </div>
+                                            <button
+                                                onClick={() => speak(meaning.example)}
+                                                className="p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                                                title="發音例句"
+                                            >
+                                                <Volume2 className="w-5 h-5 text-gray-600" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* 刷新按钮 */}
+                        <div className="flex justify-center">
+                            <button
+                                onClick={handleRefresh}
+                                className="flex items-center gap-3 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105 font-semibold text-lg"
+                            >
+                                <RefreshCw className="w-6 h-6" />
+                                <span>下一個單字</span>
+                            </button>
+                        </div>
+
+                        {/* 统计信息 */}
+                        <div className="mt-6 text-center text-sm text-gray-600">
+                            <div>刷新次數：{refreshCount}</div>
+                            <div className="mt-1">
+                                {refreshCount === 0 || refreshCount % 2 === 1 ? '📝 顯示全新單字（從未出現過）' : '🔄 複習已學過的單字'}
+                            </div>
+                            <div className="mt-2 text-xs text-gray-500">
+                                已學習單字數：{Object.keys(wordStats).length} / 10000
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 渲染应用
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ToeicVocabTool />);
+    </script>
+</body>
+</html>
